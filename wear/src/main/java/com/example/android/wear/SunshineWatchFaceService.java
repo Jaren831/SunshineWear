@@ -52,7 +52,7 @@ public class SunshineWatchFaceService extends CanvasWatchFaceService {
     /* implement service callback methods */
     private class Engine extends CanvasWatchFaceService.Engine {
         //Member variables
-        private Typeface WATCH_TEXT_TYPEFACE = Typeface.create( Typeface.SERIF, Typeface.NORMAL );
+        private Typeface WATCH_TEXT_TYPEFACE = Typeface.createFromAsset( getAssets(), "font/Roboto-Light.ttf" );
 
         private static final int MSG_UPDATE_TIME_ID = 42;
         private long mUpdateRateMs = 1000;
@@ -69,8 +69,11 @@ public class SunshineWatchFaceService extends CanvasWatchFaceService {
         private float mXOffset;
         private float mYOffset;
 
-        private int mBackgroundColor = Color.parseColor( "black" );
-        private int mTextColor = Color.parseColor( "red" );
+        float weatherXOffset;
+        float weatherYOffset;
+
+        private int mBackgroundColor = Color.parseColor( "#03A9F4" );
+        private int mTextColor = Color.parseColor( "white" );
 
         final BroadcastReceiver mTimeZoneBroadcastReceiver = new BroadcastReceiver() {
             @Override
@@ -148,9 +151,9 @@ public class SunshineWatchFaceService extends CanvasWatchFaceService {
             super.onAmbientModeChanged(inAmbientMode);
             /* the wearable switched between modes */
             if( inAmbientMode ) {
-                mTextColorPaint.setColor( Color.parseColor( "white" ) );
+                mBackgroundColorPaint.setColor( Color.parseColor( "black" ) );
             } else {
-                mTextColorPaint.setColor( Color.parseColor( "red" ) );
+                mBackgroundColorPaint.setColor( Color.parseColor( "#03A9F4" ) );
             }
 
             if( mIsLowBitAmbient ) {
@@ -172,14 +175,16 @@ public class SunshineWatchFaceService extends CanvasWatchFaceService {
         }
         private void drawTimeText( Canvas canvas ) {
             String timeText = getHourString() + ":" + String.format( "%02d", mDisplayTime.minute );
-            if( isInAmbientMode() || mIsInMuteMode ) {
-                timeText += ( mDisplayTime.hour < 12 ) ? "AM" : "PM";
-            } else {
-                timeText += String.format( ":%02d", mDisplayTime.second);
-            }
+            timeText += ( mDisplayTime.hour < 12 ) ? " AM" : " PM";
+
+
+//            if( isInAmbientMode() || mIsInMuteMode ) {
+//                timeText += ( mDisplayTime.hour < 12 ) ? "AM" : "PM";
+//            } else {
+//                timeText += String.format( ":%02d", mDisplayTime.second);
+//            }
             canvas.drawText( timeText, mXOffset, mYOffset, mTextColorPaint );
         }
-
         private String getHourString() {
             if( mDisplayTime.hour % 12 == 0 )
                 return "12";
@@ -188,6 +193,19 @@ public class SunshineWatchFaceService extends CanvasWatchFaceService {
             else
                 return String.valueOf( mDisplayTime.hour - 12 );
         }
+
+        private void drawWeatherText( Canvas canvas ) {
+            String timeText = getTempString();
+            timeText += ( mDisplayTime.hour < 12 ) ? " AM" : " PM";
+
+            canvas.drawText( timeText, weatherXOffset, weatherYOffset, mTextColorPaint );
+        }
+
+        private String getTempString() {
+            return null;
+        }
+
+
 
         private void drawBackground( Canvas canvas, Rect bounds ) {
             canvas.drawRect( 0, 0, bounds.width(), bounds.height(), mBackgroundColorPaint );
@@ -230,11 +248,13 @@ public class SunshineWatchFaceService extends CanvasWatchFaceService {
             super.onApplyWindowInsets(insets);
 
             mYOffset = getResources().getDimension( R.dimen.digital_y_offset );
+            weatherYOffset = getResources().getDimension(R.dimen.weather_digital_y_offset);
 
             if( insets.isRound() ) {
                 mXOffset = getResources().getDimension( R.dimen.digital_x_offset_round );
+                weatherXOffset = getResources().getDimension( R.dimen.weather_digital_x_offset_round );
             } else {
-                mXOffset = getResources().getDimension( R.dimen.digital_x_offset );
+                mXOffset = getResources().getDimension( R.dimen.weather_digital_x_offset );
             }
         }
 
