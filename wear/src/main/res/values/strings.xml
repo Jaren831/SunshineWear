@@ -2,4 +2,7 @@
     <string name="app_name">wear</string>
     <string name="hello_round">Hello Round World!</string>
     <string name="hello_square">Hello Square World!</string>
+    <string name="watch_face_name">UHH</string>
+    <string name="message">Watch face tapped</string>
+    <string name="my_digital_name">My Digital</string>
 </resources>
