@@ -31,8 +31,15 @@ import android.os.Message;
 import android.support.wearable.watchface.CanvasWatchFaceService;
 import android.support.wearable.watchface.WatchFaceStyle;
 import android.text.format.Time;
+import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.WindowInsets;
+
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.wearable.DataApi;
+import com.google.android.gms.wearable.DataEventBuffer;
+import com.google.android.gms.wearable.Wearable;
 
 import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
@@ -50,12 +57,16 @@ public class SunshineWatchFaceService extends CanvasWatchFaceService {
     }
 
     /* implement service callback methods */
-    private class Engine extends CanvasWatchFaceService.Engine {
+    private class Engine extends CanvasWatchFaceService.Engine implements
+            GoogleApiClient.ConnectionCallbacks,
+            GoogleApiClient.OnConnectionFailedListener,
+            DataApi.DataListener {
         //Member variables
         private Typeface WATCH_TEXT_TYPEFACE = Typeface.createFromAsset( getAssets(), "font/Roboto-Light.ttf" );
 
         private static final int MSG_UPDATE_TIME_ID = 42;
         private long mUpdateRateMs = 1000;
+        private static final String TAG = "Engine";
 
         private Time mDisplayTime;
 
@@ -68,6 +79,12 @@ public class SunshineWatchFaceService extends CanvasWatchFaceService {
 
         private float mXOffset;
         private float mYOffset;
+        private GoogleApiClient googleApiClient;
+
+        String weatherMin;
+        String weatherMax;
+        String weatherId;
+
 
         float weatherXOffset;
         float weatherYOffset;
@@ -111,11 +128,57 @@ public class SunshineWatchFaceService extends CanvasWatchFaceService {
                     .build()
             );
 
-            mDisplayTime = new Time();
+            googleApiClient = new GoogleApiClient.Builder(SunshineWatchFaceService.this)
+                    .addConnectionCallbacks(this)
+                    .addOnConnectionFailedListener(this)
+                    .addApi(Wearable.API)
+                    .build();
 
+            mDisplayTime = new Time();
+            googleApiClient.connect();
+
+        }
+
+        public void onConnected(Bundle bundle) {
+            Log.d(TAG, "connected GoogleAPI");
             initBackground();
             initDisplayText();
         }
+
+        @Override
+        public void onDataChanged(DataEventBuffer dataEventBuffer) {
+            Log.d("DataChange", TAG);
+//            for(DataEvent dataEvent : dataEventBuffer) {
+//                if (dataEvent.getType() == DataEvent.TYPE_CHANGED) {
+//                    DataMap dataMap = DataMapItem.fromDataItem(dataEvent.getDataItem()).getDataMap();
+//                    String path = dataEvent.getDataItem().getUri().getPath();
+//                    if (path.equals("/weather_data")) {
+//                        weatherMin = dataMap.getString("min");
+//                        weatherMax = dataMap.getString("max");
+//                        weatherId = dataMap.getString("id");
+//                        initDisplayText();
+//
+//                    }
+//                }
+//            }
+        }
+
+        @Override
+        public void onConnectionSuspended(int i) {
+            Log.e(TAG, "suspended GoogleAPI");
+        }
+
+        @Override
+        public void onConnectionFailed(ConnectionResult connectionResult) {
+            Log.e(TAG, "connectionFailed GoogleAPI");
+        }
+
+        @Override
+        public void onDestroy() {
+            super.onDestroy();
+        }
+
+
         private void initBackground() {
             mBackgroundColorPaint = new Paint();
             mBackgroundColorPaint.setColor( mBackgroundColor );
@@ -166,8 +229,6 @@ public class SunshineWatchFaceService extends CanvasWatchFaceService {
 
         @Override
         public void onDraw(Canvas canvas, Rect bounds) {
-            /* draw your watch face */
-
             mDisplayTime.setToNow();
 
             drawBackground( canvas, bounds );
@@ -177,12 +238,6 @@ public class SunshineWatchFaceService extends CanvasWatchFaceService {
             String timeText = getHourString() + ":" + String.format( "%02d", mDisplayTime.minute );
             timeText += ( mDisplayTime.hour < 12 ) ? " AM" : " PM";
 
-
-//            if( isInAmbientMode() || mIsInMuteMode ) {
-//                timeText += ( mDisplayTime.hour < 12 ) ? "AM" : "PM";
-//            } else {
-//                timeText += String.format( ":%02d", mDisplayTime.second);
-//            }
             canvas.drawText( timeText, bounds.centerX() - mTextColorPaint.measureText(timeText) / 2, bounds.centerY(), mTextColorPaint );
             canvas.drawText( getWeatherText(), bounds.centerX() - mTextColorPaint.measureText(getWeatherText()) / 2, bounds.centerY() + mTextColorPaint.measureText(timeText) / 4, mTextColorPaint );
         }
@@ -196,7 +251,7 @@ public class SunshineWatchFaceService extends CanvasWatchFaceService {
         }
 
         private String getWeatherText() {
-            return "HELLO";
+            return weatherId + weatherMax + weatherMin;
         }
 
         private void drawBackground( Canvas canvas, Rect bounds ) {
