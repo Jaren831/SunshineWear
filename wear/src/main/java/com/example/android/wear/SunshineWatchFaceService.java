@@ -244,7 +244,7 @@ public class SunshineWatchFaceService extends CanvasWatchFaceService {
         }
 
         private String getWeatherText() {
-            return "hello";
+            return tempMin;
         }
 
         private void drawBackground( Canvas canvas, Rect bounds ) {
