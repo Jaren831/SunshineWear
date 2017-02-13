@@ -171,9 +171,9 @@ public class SunshineWatchFaceService extends CanvasWatchFaceService {
             mDisplayTime.setToNow();
 
             drawBackground( canvas, bounds );
-            drawTimeText( canvas );
+            drawTimeText(canvas, bounds );
         }
-        private void drawTimeText( Canvas canvas ) {
+        private void drawTimeText( Canvas canvas, Rect bounds ) {
             String timeText = getHourString() + ":" + String.format( "%02d", mDisplayTime.minute );
             timeText += ( mDisplayTime.hour < 12 ) ? " AM" : " PM";
 
@@ -183,7 +183,8 @@ public class SunshineWatchFaceService extends CanvasWatchFaceService {
 //            } else {
 //                timeText += String.format( ":%02d", mDisplayTime.second);
 //            }
-            canvas.drawText( timeText, mXOffset, mYOffset, mTextColorPaint );
+            canvas.drawText( timeText, bounds.centerX() - mTextColorPaint.measureText(timeText) / 2, bounds.centerY(), mTextColorPaint );
+            canvas.drawText( getWeatherText(), bounds.centerX() - mTextColorPaint.measureText(getWeatherText()) / 2, bounds.centerY() + mTextColorPaint.measureText(timeText) / 4, mTextColorPaint );
         }
         private String getHourString() {
             if( mDisplayTime.hour % 12 == 0 )
@@ -194,18 +195,9 @@ public class SunshineWatchFaceService extends CanvasWatchFaceService {
                 return String.valueOf( mDisplayTime.hour - 12 );
         }
 
-        private void drawWeatherText( Canvas canvas ) {
-            String timeText = getTempString();
-            timeText += ( mDisplayTime.hour < 12 ) ? " AM" : " PM";
-
-            canvas.drawText( timeText, weatherXOffset, weatherYOffset, mTextColorPaint );
+        private String getWeatherText() {
+            return "HELLO";
         }
-
-        private String getTempString() {
-            return null;
-        }
-
-
 
         private void drawBackground( Canvas canvas, Rect bounds ) {
             canvas.drawRect( 0, 0, bounds.width(), bounds.height(), mBackgroundColorPaint );
