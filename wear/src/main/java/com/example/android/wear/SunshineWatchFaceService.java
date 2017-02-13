@@ -136,13 +136,14 @@ public class SunshineWatchFaceService extends CanvasWatchFaceService {
 
             mDisplayTime = new Time();
             googleApiClient.connect();
+            initBackground();
+            initDisplayText();
 
         }
 
         public void onConnected(Bundle bundle) {
             Log.d(TAG, "connected GoogleAPI");
-            initBackground();
-            initDisplayText();
+
         }
 
         @Override
