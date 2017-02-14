@@ -31,6 +31,7 @@ import android.os.Message;
 import android.support.wearable.watchface.CanvasWatchFaceService;
 import android.support.wearable.watchface.WatchFaceStyle;
 import android.text.format.Time;
+import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.WindowInsets;
 
@@ -73,13 +74,15 @@ public class SunshineWatchFaceService extends CanvasWatchFaceService {
 
         private Paint mBackgroundColorPaint;
         private Paint mTextColorPaint;
+        private final String TAG = SunshineWatchFaceService.class.getSimpleName();
+
 
         private boolean mHasTimeZoneReceiverBeenRegistered = false;
         private boolean mIsInMuteMode;
         private boolean mIsLowBitAmbient;
 
-        String tempMin;
-        String temppMax;
+        String tempMin = "test";
+        String tempMax;
         String weatherId;
 
         private float mXOffset;
@@ -144,25 +147,29 @@ public class SunshineWatchFaceService extends CanvasWatchFaceService {
 
         @Override
         public void onConnected(Bundle bundle) {
+            Log.d(TAG, "Wear connected");
         }
 
         @Override
         public void onConnectionSuspended(int i) {
+            Log.d(TAG, "Wear connection suspended");
         }
 
         @Override
         public void onConnectionFailed(ConnectionResult connectionResult) {
+            Log.e(TAG, "Wear connection failed");
         }
 
         @Override
         public void onDataChanged(DataEventBuffer dataEvents) {
+            Log.d(TAG, "Wear data changed");
             for (DataEvent dataEvent : dataEvents) {
                 if (dataEvent.getType() == DataEvent.TYPE_CHANGED) {
                     DataMap dataMap = DataMapItem.fromDataItem(dataEvent.getDataItem()).getDataMap();
                     String path = dataEvent.getDataItem().getUri().getPath();
                     if (path.equals("/weather_data")) {
                         tempMin = dataMap.getString("tempMin");
-                        temppMax = dataMap.getString("tempMax");
+                        tempMax = dataMap.getString("tempMax");
                         weatherId = dataMap.getString("weatherId");
                     }
                 }
