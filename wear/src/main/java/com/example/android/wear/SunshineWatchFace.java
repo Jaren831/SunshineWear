@@ -25,7 +25,6 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
 import android.graphics.Typeface;
-import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -166,16 +165,17 @@ public class SunshineWatchFace extends CanvasWatchFaceService {
             public void onDataChanged(DataEventBuffer dataEvents) {
                 Log.d(TAG, "Wear data changed");
                 for (DataEvent event : dataEvents) {
-                    Uri uri = event.getDataItem().getUri();
-                    String path = uri.getPath();
-                    if (path.equals("/weather_data")) {
-                        final DataMap dataMap = DataMapItem.fromDataItem(event.getDataItem()).getDataMap();
-                        tempMin = dataMap.getString("tempMin");
-                        tempMax = dataMap.getString("tempMax");
-                        weatherId = dataMap.getString("weatherId");
+                    if (event.getType() == DataEvent.TYPE_CHANGED) {
+                        DataMap dataMap = DataMapItem.fromDataItem(event.getDataItem()).getDataMap();
+                        String path = event.getDataItem().getUri().getPath();
+                        if (path.equals("/weather_data")) {
+                            tempMin = dataMap.getString("tempMin");
+                            tempMax = dataMap.getString("tempMax");
+                            weatherId = dataMap.getString("weatherId");
                         }
                     }
                 }
+            }
         };
 
         private void initBackground() {
@@ -234,8 +234,10 @@ public class SunshineWatchFace extends CanvasWatchFaceService {
             String timeText = getHourString() + ":" + String.format( "%02d", mDisplayTime.minute );
             timeText += ( mDisplayTime.hour < 12 ) ? " AM" : " PM";
 
+            String weatherText = weatherId + tempMin + tempMax;
+
             canvas.drawText( timeText, bounds.centerX() - mTextColorPaint.measureText(timeText) / 2, bounds.centerY(), mTextColorPaint );
-            canvas.drawText( getWeatherText(), bounds.centerX() - mTextColorPaint.measureText(getWeatherText()) / 2, bounds.centerY() + mTextColorPaint.measureText(timeText) / 4, mTextColorPaint );
+            canvas.drawText( weatherText, bounds.centerX() - mTextColorPaint.measureText(weatherText) / 2, bounds.centerY() + mTextColorPaint.measureText(timeText) / 4, mTextColorPaint );
         }
         private String getHourString() {
             if( mDisplayTime.hour % 12 == 0 )
@@ -245,10 +247,10 @@ public class SunshineWatchFace extends CanvasWatchFaceService {
             else
                 return String.valueOf( mDisplayTime.hour - 12 );
         }
-
-        private String getWeatherText() {
-            return tempMin;
-        }
+//
+//        private String getWeatherText() {
+//            return "test";
+//        }
 
         private void drawBackground( Canvas canvas, Rect bounds ) {
             canvas.drawRect( 0, 0, bounds.width(), bounds.height(), mBackgroundColorPaint );
