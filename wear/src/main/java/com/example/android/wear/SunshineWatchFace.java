@@ -25,6 +25,7 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
 import android.graphics.Typeface;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -51,7 +52,7 @@ import java.util.concurrent.TimeUnit;
  * Digital watch face with seconds. In ambient mode, the seconds aren't displayed. On devices with
  * low-bit ambient mode, the text is drawn without anti-aliasing in ambient mode.
  */
-public class SunshineWatchFaceService extends CanvasWatchFaceService {
+public class SunshineWatchFace extends CanvasWatchFaceService {
 
     @Override
     public Engine onCreateEngine() {
@@ -62,8 +63,7 @@ public class SunshineWatchFaceService extends CanvasWatchFaceService {
     /* implement service callback methods */
     private class Engine extends CanvasWatchFaceService.Engine implements
             GoogleApiClient.ConnectionCallbacks,
-            GoogleApiClient.OnConnectionFailedListener,
-            DataApi.DataListener {
+            GoogleApiClient.OnConnectionFailedListener {
         //Member variables
         private Typeface WATCH_TEXT_TYPEFACE = Typeface.createFromAsset( getAssets(), "font/Roboto-Light.ttf" );
 
@@ -74,14 +74,14 @@ public class SunshineWatchFaceService extends CanvasWatchFaceService {
 
         private Paint mBackgroundColorPaint;
         private Paint mTextColorPaint;
-        private final String TAG = SunshineWatchFaceService.class.getSimpleName();
+        private final String TAG = SunshineWatchFace.class.getSimpleName();
 
 
         private boolean mHasTimeZoneReceiverBeenRegistered = false;
         private boolean mIsInMuteMode;
         private boolean mIsLowBitAmbient;
 
-        String tempMin = "test";
+        String tempMin;
         String tempMax;
         String weatherId;
 
@@ -125,7 +125,7 @@ public class SunshineWatchFaceService extends CanvasWatchFaceService {
         public void onCreate(SurfaceHolder holder) {
             super.onCreate(holder);
             /* initialize your watch face */
-            setWatchFaceStyle( new WatchFaceStyle.Builder( SunshineWatchFaceService.this )
+            setWatchFaceStyle( new WatchFaceStyle.Builder( SunshineWatchFace.this )
                     .setBackgroundVisibility( WatchFaceStyle.BACKGROUND_VISIBILITY_INTERRUPTIVE )
                     .setCardPeekMode( WatchFaceStyle.PEEK_MODE_VARIABLE )
                     .setShowSystemUiTime( false )
@@ -134,7 +134,7 @@ public class SunshineWatchFaceService extends CanvasWatchFaceService {
 
             mDisplayTime = new Time();
 
-            googleApiClient = new GoogleApiClient.Builder(SunshineWatchFaceService.this)
+            googleApiClient = new GoogleApiClient.Builder(SunshineWatchFace.this)
                     .addApi(Wearable.API)
                     .addConnectionCallbacks(this)
                     .addOnConnectionFailedListener(this)
@@ -147,35 +147,36 @@ public class SunshineWatchFaceService extends CanvasWatchFaceService {
 
         @Override
         public void onConnected(Bundle bundle) {
-            Log.d(TAG, "Wear connected");
+            Log.d(TAG, "Wear connected GoogleAPI");
+            Wearable.DataApi.addListener(googleApiClient, onDataChangedListener);
         }
 
         @Override
         public void onConnectionSuspended(int i) {
-            Log.d(TAG, "Wear connection suspended");
+            Log.d(TAG, "Wear GoogleAPI suspended");
         }
 
         @Override
         public void onConnectionFailed(ConnectionResult connectionResult) {
-            Log.e(TAG, "Wear connection failed");
+            Log.e(TAG, "Wear GoogleAPI connection failed");
         }
 
-        @Override
-        public void onDataChanged(DataEventBuffer dataEvents) {
-            Log.d(TAG, "Wear data changed");
-            for (DataEvent dataEvent : dataEvents) {
-                if (dataEvent.getType() == DataEvent.TYPE_CHANGED) {
-                    DataMap dataMap = DataMapItem.fromDataItem(dataEvent.getDataItem()).getDataMap();
-                    String path = dataEvent.getDataItem().getUri().getPath();
+        private final DataApi.DataListener onDataChangedListener = new DataApi.DataListener() {
+            @Override
+            public void onDataChanged(DataEventBuffer dataEvents) {
+                Log.d(TAG, "Wear data changed");
+                for (DataEvent event : dataEvents) {
+                    Uri uri = event.getDataItem().getUri();
+                    String path = uri.getPath();
                     if (path.equals("/weather_data")) {
+                        final DataMap dataMap = DataMapItem.fromDataItem(event.getDataItem()).getDataMap();
                         tempMin = dataMap.getString("tempMin");
                         tempMax = dataMap.getString("tempMax");
                         weatherId = dataMap.getString("weatherId");
+                        }
                     }
                 }
-            }
-
-        }
+        };
 
         private void initBackground() {
             mBackgroundColorPaint = new Paint();
@@ -193,7 +194,6 @@ public class SunshineWatchFaceService extends CanvasWatchFaceService {
         @Override
         public void onPropertiesChanged(Bundle properties) {
             super.onPropertiesChanged(properties);
-            /* get device features (burn-in, low-bit ambient) */
             if( properties.getBoolean( PROPERTY_BURN_IN_PROTECTION, false ) ) {
                 mIsLowBitAmbient = properties.getBoolean( PROPERTY_LOW_BIT_AMBIENT, false );
             }
@@ -202,7 +202,6 @@ public class SunshineWatchFaceService extends CanvasWatchFaceService {
         @Override
         public void onTimeTick() {
             super.onTimeTick();
-            /* the time changed */
             invalidate();
 
         }
@@ -210,7 +209,6 @@ public class SunshineWatchFaceService extends CanvasWatchFaceService {
         @Override
         public void onAmbientModeChanged(boolean inAmbientMode) {
             super.onAmbientModeChanged(inAmbientMode);
-            /* the wearable switched between modes */
             if( inAmbientMode ) {
                 mBackgroundColorPaint.setColor( Color.parseColor( "black" ) );
             } else {
@@ -227,8 +225,6 @@ public class SunshineWatchFaceService extends CanvasWatchFaceService {
 
         @Override
         public void onDraw(Canvas canvas, Rect bounds) {
-            /* draw your watch face */
-
             mDisplayTime.setToNow();
 
             drawBackground( canvas, bounds );
@@ -261,13 +257,10 @@ public class SunshineWatchFaceService extends CanvasWatchFaceService {
         @Override
         public void onVisibilityChanged(boolean visible) {
             super.onVisibilityChanged(visible);
-            /* the watch face became visible or invisible */
             if( visible ) {
                 if( !mHasTimeZoneReceiverBeenRegistered ) {
-
                     IntentFilter filter = new IntentFilter( Intent.ACTION_TIMEZONE_CHANGED );
-                    SunshineWatchFaceService.this.registerReceiver( mTimeZoneBroadcastReceiver, filter );
-
+                    SunshineWatchFace.this.registerReceiver( mTimeZoneBroadcastReceiver, filter );
                     mHasTimeZoneReceiverBeenRegistered = true;
                 }
 
@@ -275,11 +268,10 @@ public class SunshineWatchFaceService extends CanvasWatchFaceService {
                 mDisplayTime.setToNow();
             } else {
                 if( mHasTimeZoneReceiverBeenRegistered ) {
-                    SunshineWatchFaceService.this.unregisterReceiver( mTimeZoneBroadcastReceiver );
+                    SunshineWatchFace.this.unregisterReceiver( mTimeZoneBroadcastReceiver );
                     mHasTimeZoneReceiverBeenRegistered = false;
                 }
             }
-
             updateTimer();
         }
 
@@ -308,13 +300,11 @@ public class SunshineWatchFaceService extends CanvasWatchFaceService {
         @Override
         public void onInterruptionFilterChanged(int interruptionFilter) {
             super.onInterruptionFilterChanged(interruptionFilter);
-
             boolean isDeviceMuted = ( interruptionFilter == android.support.wearable.watchface.WatchFaceService.INTERRUPTION_FILTER_NONE );
             if( isDeviceMuted ) {
                 mUpdateRateMs = TimeUnit.MINUTES.toMillis( 1 );
             } else {
             }
-
             if( mIsInMuteMode != isDeviceMuted ) {
                 mIsInMuteMode = isDeviceMuted;
                 int alpha = ( isDeviceMuted ) ? 100 : 255;
