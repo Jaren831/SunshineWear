@@ -234,7 +234,7 @@ public class SunshineWatchFace extends CanvasWatchFaceService {
             String timeText = getHourString() + ":" + String.format( "%02d", mDisplayTime.minute );
             timeText += ( mDisplayTime.hour < 12 ) ? " AM" : " PM";
 
-            String weatherText = weatherId + tempMin + tempMax;
+            String weatherText = weatherId + tempMax + tempMin;
 
             canvas.drawText( timeText, bounds.centerX() - mTextColorPaint.measureText(timeText) / 2, bounds.centerY(), mTextColorPaint );
             canvas.drawText( weatherText, bounds.centerX() - mTextColorPaint.measureText(weatherText) / 2, bounds.centerY() + mTextColorPaint.measureText(timeText) / 4, mTextColorPaint );
