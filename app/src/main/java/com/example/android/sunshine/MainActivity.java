@@ -135,7 +135,7 @@ public class MainActivity extends AppCompatActivity implements
         DataMap map = mapRequest.getDataMap();
         map.putString("tempMin", lowTempView.getText().toString());
         map.putString("tempMax", highTempView.getText().toString());
-        map.putString("weatherId", "hello");
+        map.putString("weatherId", "uh");
         map.putLong("time",System.currentTimeMillis());
 
 
