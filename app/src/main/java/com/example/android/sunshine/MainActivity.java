@@ -17,6 +17,8 @@ package com.example.android.sunshine;
 
 import android.content.Intent;
 import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -31,6 +33,7 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
@@ -45,6 +48,8 @@ import com.google.android.gms.wearable.DataMap;
 import com.google.android.gms.wearable.PutDataMapRequest;
 import com.google.android.gms.wearable.PutDataRequest;
 import com.google.android.gms.wearable.Wearable;
+
+import java.io.ByteArrayOutputStream;
 
 public class MainActivity extends AppCompatActivity implements
         LoaderManager.LoaderCallbacks<Cursor>,
@@ -75,6 +80,10 @@ public class MainActivity extends AppCompatActivity implements
     GoogleApiClient googleApiClient;
 
     private ProgressBar mLoadingIndicator;
+
+    TextView highTempView;
+    TextView lowTempView;
+    ImageView weatherImageview;
 
 
     @Override
@@ -115,7 +124,7 @@ public class MainActivity extends AppCompatActivity implements
 
     @Override
     public void onConnected(Bundle bundle) {
-        sendWeatherData(MAIN_FORECAST_PROJECTION[1], MAIN_FORECAST_PROJECTION[2], MAIN_FORECAST_PROJECTION[3]);
+        sendWeatherData();
     }
 
     @Override
@@ -126,16 +135,25 @@ public class MainActivity extends AppCompatActivity implements
     public void onConnectionFailed(ConnectionResult connectionResult) {
     }
 
-    public void sendWeatherData(String tempMin, String tempMax, String weatherId) {
+    public void sendWeatherData() {
 
-        TextView highTempView = (TextView) findViewById(R.id.high_temperature);
-        TextView lowTempView = (TextView) findViewById(R.id.low_temperature);
+        highTempView = (TextView) findViewById(R.id.high_temperature);
+        lowTempView = (TextView) findViewById(R.id.low_temperature);
+
+        weatherImageview = (ImageView) findViewById(R.id.weather_icon);
+        BitmapDrawable drawable = (BitmapDrawable) weatherImageview.getDrawable();
+        Bitmap bitmap = drawable.getBitmap();
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.PNG, 100, byteArrayOutputStream);
+        byte[] byteArray = byteArrayOutputStream.toByteArray();
+
+
 
         PutDataMapRequest mapRequest = PutDataMapRequest.create("/weather_data");
         DataMap map = mapRequest.getDataMap();
         map.putString("tempMin", lowTempView.getText().toString());
         map.putString("tempMax", highTempView.getText().toString());
-        map.putString("weatherId", "uh");
+        map.putByteArray("weatherId", byteArray);
         map.putLong("time",System.currentTimeMillis());
 
 
