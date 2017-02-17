@@ -84,7 +84,7 @@ public class SunshineWatchFace extends CanvasWatchFaceService {
 
         String tempMin;
         String tempMax;
-        byte[] weatherIconByteArray;
+        byte[] weatherIconByteArray = new byte[0];
         String weatherText;
         Bitmap weatherBitmap;
 
