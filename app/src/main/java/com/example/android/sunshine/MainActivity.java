@@ -84,6 +84,10 @@ public class MainActivity extends AppCompatActivity implements
     TextView highTempView;
     TextView lowTempView;
     ImageView weatherImageview;
+    BitmapDrawable drawable;
+    Bitmap bitmap;
+    ByteArrayOutputStream byteArrayOutputStream;
+    byte[] byteArray;
 
 
     @Override
@@ -141,11 +145,11 @@ public class MainActivity extends AppCompatActivity implements
         lowTempView = (TextView) findViewById(R.id.low_temperature);
 
         weatherImageview = (ImageView) findViewById(R.id.weather_icon);
-        BitmapDrawable drawable = (BitmapDrawable) weatherImageview.getDrawable();
-        Bitmap bitmap = drawable.getBitmap();
-        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-        bitmap.compress(Bitmap.CompressFormat.PNG, 100, byteArrayOutputStream);
-        byte[] byteArray = byteArrayOutputStream.toByteArray();
+        drawable = (BitmapDrawable) weatherImageview.getDrawable();
+        bitmap = drawable.getBitmap();
+        byteArrayOutputStream = new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 70, byteArrayOutputStream);
+        byteArray = byteArrayOutputStream.toByteArray();
 
 
 
