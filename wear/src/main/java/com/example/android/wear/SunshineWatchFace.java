@@ -243,7 +243,7 @@ public class SunshineWatchFace extends CanvasWatchFaceService {
 
             canvas.drawText( timeText, bounds.centerX() - mTextColorPaint.measureText(timeText) / 2, bounds.centerY(), mTextColorPaint );
             canvas.drawText( weatherText, bounds.centerX() - mTextColorPaint.measureText(weatherText) / 2, bounds.centerY() + mTextColorPaint.measureText(timeText) / 4, mTextColorPaint );
-            canvas.drawBitmap( weatherBitmap, bounds.centerX(), bounds.centerY(), mTextColorPaint );
+//            canvas.drawBitmap( weatherBitmap, bounds.centerX(), bounds.centerY(), mTextColorPaint );
         }
         private String getHourString() {
             if( mDisplayTime.hour % 12 == 0 )
